@@ -13,7 +13,7 @@ def generate_rain_data(processes, columns):
             name = proc.name()[:10]
             cpu = f"{proc.cpu_percent():.1f}%"
             mem = f"{proc.memory_percent():.1f}%"
-            entry = f"{pid} {name} {cpu} {mem}"
+            entry = f"{pid}\n{name}\n{cpu}\n{mem}"  # Render vertically
             random.choice(rain_data).append(entry)
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
@@ -37,13 +37,15 @@ def matrix_rain(stdscr):
         stdscr.clear()
         for col, pos in enumerate(positions):
             data = rain_data[col] if col < len(rain_data) else []
-            for i, line in enumerate(data):
-                y = (pos + i) % height
-                x = col * 20
-                try:
-                    stdscr.addstr(y, x, line.ljust(20), curses.color_pair(1))
-                except curses.error:
-                    continue
+            for i, block in enumerate(data):
+                lines = block.split("\n")  # Split the vertical block into lines
+                for offset, line in enumerate(lines):
+                    y = (pos + i * len(lines) + offset) % height
+                    x = col * 20
+                    try:
+                        stdscr.addstr(y, x, line.ljust(20), curses.color_pair(1))
+                    except curses.error:
+                        continue
             positions[col] = (positions[col] + 1) % height
         
         stdscr.refresh()
@@ -51,3 +53,4 @@ def matrix_rain(stdscr):
 
 if __name__ == "__main__":
     curses.wrapper(matrix_rain)
+
